@@ -18,4 +18,7 @@ void print_state(std::vector<Boid> const& state);
 
 void write_data(std::vector<std::vector<Boid>> const& states);
 
+void write_counter(std::array<double, simulations> const& preys_eaten,
+                   int const seek_type);
+
 #endif

@@ -10,7 +10,6 @@
 int main(int argc, char* argv[])
 {
   try {
-    int constexpr simulations{100};
     // default values are modified only if an input value is specified
     double angle{300.};
     double d{35.};
@@ -58,6 +57,8 @@ int main(int argc, char* argv[])
                           duration, steps,    prescale,  prescale_limit,
                           N_boids,  seek_type};
 
+    std::array<double, simulations> preys_eaten;
+
     for (int i{0}; i != simulations; ++i) { // simulation loop
       // obtains seed to pass to random number engine
       std::random_device rd;
@@ -71,6 +72,8 @@ int main(int argc, char* argv[])
       std::vector<std::vector<Boid>> states;
       simulate(flock, pars, states);
 
+      preys_eaten[0] = 1; // replace with actual number from counter
+
       // data analysis and printing
       std::cout << "\n  Report for each of the stored states:\n";
       std::cout << "\n  AVERAGE DISTANCE:              AVERAGE SPEED: \n\n";
@@ -79,12 +82,9 @@ int main(int argc, char* argv[])
       std::cout << '\n' << std::setfill('=') << std::setw(53);
       std::cout << '\n' << "    SUMMARY: Parameters used in the simulation\n\n";
       print_parameters(pars);
-
-      // Saves data if asked for
-      if (save_data) {
-        write_data(states);
-      }
     }
+
+    write_counter(preys_eaten, seek_type); // write count to file for analysis
 
   } catch (Invalid_Parameter const& par_err) {
     std::cerr << "Invalid Parameter: " << par_err.what() << '\n';
