@@ -241,7 +241,18 @@ Velocity cohesion(Boid const& boid, Flock const& flock, Parameters const& pars)
 Velocity seek(Boid const& boid, Flock const& flock, Parameters const& pars)
 {
   // note that find_prey will assert internally that boid is a pred
-  auto prey{find_prey(boid, flock, pars.get_angle())};
+  Boid prey{{}, {}};
+
+  switch (pars.get_seek_type()) {
+  case 0:
+    prey = find_prey(boid, flock, pars.get_angle());
+    break;
+  case 1:
+    prey = find_prey_isolated(boid, flock, pars.get_angle());
+    break;
+  default:
+    break;
+  }
 
   if (prey.is_pred()) {
     // this means find_prey returned boid itself (i.e. no preys in sight)

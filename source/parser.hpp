@@ -9,7 +9,7 @@ inline auto get_parser(double& angle, double& d, double& d_s, double& s,
                        double& c, double& a, double& max_speed,
                        double& min_speed_fraction, double& duration, int& steps,
                        int& prescale, int& N_boids, bool& save_data,
-                       bool& show_help)
+                       bool& show_help, int& seek_type)
 {
   return lyra::cli{
       lyra::help(show_help)
@@ -52,7 +52,10 @@ inline auto get_parser(double& angle, double& d, double& d_s, double& s,
           "120]")
       | lyra::opt(save_data)["--ON"]("Saves data obtained from statistical "
                                      "analysis to specified file  [Default is "
-                                     "OFF]")};
+                                     "OFF]")
+      | lyra::opt(seek_type, "seek-type")["--seek-type"](
+          "Set the seek type  [Default value is "
+          "1]")};
 }
 
 // prints summary of values of parameters used in the simulation

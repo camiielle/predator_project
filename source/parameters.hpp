@@ -53,6 +53,7 @@ class Parameters
   int N_boids_;
   double d_s_pred_; // separation distance for predators
   double s_pred_;   // separation factor for predators
+  int seek_type_;   // 0 for closer, 1 for isolated, 2 for COM
 
   // values set by developer:
   double x_min_{0.};
@@ -82,7 +83,7 @@ class Parameters
   explicit Parameters(double angle, double d, double d_s, double s, double c,
                       double a, double max_speed, double min_speed_fraction,
                       double duration, int steps, int prescale_or_fps,
-                      int prescale_or_fps_limit, int N_boids)
+                      int prescale_or_fps_limit, int N_boids, int seek_type = 0)
       : angle_{angle}
       , d_{d}
       , d_s_{d_s}
@@ -98,6 +99,7 @@ class Parameters
       , N_boids_{N_boids}
       , d_s_pred_{7. * d_s} // boids' separation rule from predators has larger
       , s_pred_{10.5 * s}   // separation distance and highest separation factor
+      , seek_type_{seek_type}
 
   {
     is_in_range(angle_, 0., 360., "angle-of-view");
@@ -154,6 +156,7 @@ class Parameters
   double& set_y_max(){return y_max_;}
   double get_d_s_pred() const{return d_s_pred_;}
   double get_s_pred() const{return s_pred_;}
+  int get_seek_type() const{return seek_type_;}
   // clang-format on
 };
 
