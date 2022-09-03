@@ -43,6 +43,7 @@ std::vector<Boid>& competitors(Boid const& boid, Flock const& flock,
                                std::vector<Boid>& competitors, double angle,
                                double d_s);
 Boid const& find_prey(Boid const& boid, Flock const& flock, double angle);
+Boid find_prey_isolated(Boid const& boid, Flock const& flock, double angle);
 
 // flying rules' functions
 Velocity separation(Boid const& boid, Flock const& flock,

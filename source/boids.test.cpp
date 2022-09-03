@@ -253,14 +253,16 @@ TEST_CASE("Testing behavior in corners' proximity")
   SUBCASE("testing bound position")
   {
     // using both predators and regular boids
-    CHECK((bound_position(b1, xmin, xmax, ymin, ymax)).x()) // crossed 2 borders
-    == doctest::Approx(3. - 1.5 * std::sqrt(18.));
-    CHECK((bound_position(b1, xmin, xmax, ymin, ymax)).y())
-    == doctest::Approx(3. - 1.5 * std::sqrt(18.));
-    CHECK((bound_position(b4, xmin, xmax, ymin, ymax)).x()) // crossed 2 borders
-    == doctest::Approx(-1.5 + 3. / sqrt2);
-    CHECK((bound_position(b4, xmin, xmax, ymin, ymax)).y())
-    == doctest::Approx(-1.5 + 3. / sqrt2);
+    CHECK(
+        ((bound_position(b1, xmin, xmax, ymin, ymax)).x()) // crossed 2 borders
+        == doctest::Approx(3. - 1.5 * std::sqrt(18.)));
+    CHECK(((bound_position(b1, xmin, xmax, ymin, ymax)).y())
+          == doctest::Approx(3. - 1.5 * std::sqrt(18.)));
+    CHECK(
+        ((bound_position(b4, xmin, xmax, ymin, ymax)).x()) // crossed 2 borders
+        == doctest::Approx(-1.5 + 3. / sqrt2));
+    CHECK(((bound_position(b4, xmin, xmax, ymin, ymax)).y())
+          == doctest::Approx(-1.5 + 3. / sqrt2));
     CHECK((bound_position(b2, xmin, xmax, ymin, ymax).x()) // crossed xmax
           == doctest::Approx(1. - 1.5 * std::sqrt(5.)));
     CHECK((bound_position(b3, xmin, xmax, ymin, ymax).y()) // crossed ymin
