@@ -22,6 +22,11 @@ add_executable(boids-sfml source/main-sfml.cpp source/boids.cpp source/flock.cpp
 target_link_libraries(boids-sfml PRIVATE sfml-graphics)
 target_link_libraries(boids-sfml PRIVATE bfg::lyra)
 target_compile_definitions(boids-sfml PRIVATE GRAPHICS)
+add_custom_command(
+        TARGET boids-sfml POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+               ${CMAKE_SOURCE_DIR}/bigsky.png
+               ${CMAKE_CURRENT_BINARY_DIR}/bigsky.png)
 
 # to disable testing, pass -DBUILD_TESTING=OFF to cmake during the configuration phase
 if (BUILD_TESTING)
