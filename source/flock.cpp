@@ -158,6 +158,30 @@ Boid find_prey_isolated(Boid const& boid, Flock const& flock, double angle)
   }
 }
 
+// tells if second boid is victim of the first one
+bool is_victim(Boid const& predator, Boid const& regular,
+               Parameters const& pars)
+{
+  assert(predator.is_pred());
+  return ((!regular.is_pred()) && (!regular.is_eaten())
+          && (is_seen(predator, regular, pars.get_angle()))
+          && distance(predator, regular) < (pars.get_d_s_pred() / 24.5));
+}
+
+// changes boids' parameter is_eaten and increases flock's internal counter
+void set_victims(Boid const& boid, Flock& flock, Parameters const& pars)
+{
+  // only preds can eat boids
+  if (boid.is_pred()) {
+    for (Boid& b : flock.state()) {
+      if (is_victim(boid, b, pars)) {
+        b.is_eaten() = true;
+        flock.counter()++;
+      }
+    }
+  }
+}
+
 // NB: the fact that boid itself is inserted in comps or close_nbrs vectors does
 // not influence sum, since (boid.position()-boid.position()) equals {0.,0.}
 Velocity separation(Boid const& boid, Flock const& flock,
@@ -325,6 +349,8 @@ void Flock::evolve(Parameters const& pars)
   // flock_ as the output range in std::transform) to prevent an old boid's
   // state from being calculated with an already updated boid
   flock_ = state_f;
+  std::for_each(flock_.begin(), flock_.end(),
+                [&](Boid const& boid) { set_victims(boid, *this, pars); });
 }
 
 // fills empty vector with N_boids with randomly generated positions and

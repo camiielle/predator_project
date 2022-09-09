@@ -11,6 +11,7 @@ class Flock
 {
   std::vector<Boid> flock_;
   Boid solve(Boid const& boid, Parameters const& pars) const;
+  int counter_{0};
 
  public:
   explicit Flock(std::vector<Boid> const& flock)
@@ -24,6 +25,9 @@ class Flock
   //NB not risking narrowing with int as return type since parameter N_boids is an int
   int size() const { return flock_.size(); }
   std::vector<Boid> const& state() const { return flock_; }
+  std::vector<Boid>& state() { return flock_; }
+  int counter() const {return counter_;}
+  int& counter() {return counter_;}
   void push_back(Boid const& boid) 
   {
     assert (!empty());
@@ -44,6 +48,7 @@ std::vector<Boid>& competitors(Boid const& boid, Flock const& flock,
                                double d_s);
 Boid const& find_prey(Boid const& boid, Flock const& flock, double angle);
 Boid find_prey_isolated(Boid const& boid, Flock const& flock, double angle);
+void set_victims(Boid const& boid, Flock& flock, Parameters const& pars);
 
 // flying rules' functions
 Velocity separation(Boid const& boid, Flock const& flock,
