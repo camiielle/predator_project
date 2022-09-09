@@ -7,13 +7,13 @@
 // defining flocks' flying rules (different for regular boid and predator)
 // functions to perform simulation (methods solve and evolve, fill, simulate)
 
-// fills vector with neighbours of boid (inserting also boid itself)
+// fills vector with neighbours of boid (inserting also boid itself, if boid is
+// regular)
 std::vector<Boid>& neighbours(Boid const& boid, Flock const& flock,
                               std::vector<Boid>& nbrs, double angle, double d)
 {
-  assert(!(boid.is_pred())); // flocking behavior doesn't apply to predators
-  assert(nbrs.empty());      // expects an empty vector to copy neighbours in
-  assert(flock.size() > 1);  // expects a flock with more than one boid
+  assert(nbrs.empty());     // expects an empty vector to copy neighbours in
+  assert(flock.size() > 1); // expects a flock with more than one boid
   std::copy_if((flock.state().begin()), (flock.state().end()),
                std::back_inserter(nbrs), [=, &boid](Boid const& other) {
                  return (!(other.is_pred())) && (is_seen(boid, other, angle))
@@ -218,11 +218,12 @@ Velocity alignment(Boid const& boid, Flock const& flock, Parameters const& pars)
 Velocity cohesion(Boid const& boid, Flock const& flock, Parameters const& pars)
 {
   std::vector<Boid> nbrs{};
-  // note that neighbours will assert internally that boid is not a pred
-  neighbours(boid, flock, nbrs, pars.get_angle(), pars.get_d());
+  double distance{(boid.is_pred()) ? pars.get_d_s_pred() : pars.get_d()};
+  neighbours(boid, flock, nbrs, pars.get_angle(), distance);
   int vec_size{static_cast<int>(nbrs.size())}; // not risking narrowing since
   // N_nbrs < N_boids which is an int
-  if (vec_size == 1) { // if nbrs has only 1 element, it's boid itself
+  if (vec_size == 1 || vec_size == 0) { // for regulars, if nbrs has only 1
+                                        // element, it's boid itself
     return {0., 0.};
   } else {
     auto sum{std::transform_reduce((nbrs.begin()), (nbrs.end()),
@@ -240,39 +241,43 @@ Velocity cohesion(Boid const& boid, Flock const& flock, Parameters const& pars)
 
 Velocity seek(Boid const& boid, Flock const& flock, Parameters const& pars)
 {
-  // note that find_prey will assert internally that boid is a pred
-  Boid prey{{}, {}};
+  assert(boid.is_pred());
+  if (pars.get_seek_type() == 2) {
+    return cohesion(boid, flock, pars);
+  } else {
+    Boid prey{{}, {}};
 
-  switch (pars.get_seek_type()) {
-  case 0:
-    prey = find_prey(boid, flock, pars.get_angle());
-    break;
-  case 1:
-    prey = find_prey_isolated(boid, flock, pars.get_angle());
-    break;
-  default:
-    break;
-  }
+    switch (pars.get_seek_type()) {
+    case 0:
+      prey = find_prey(boid, flock, pars.get_angle());
+      break;
+    case 1:
+      prey = find_prey_isolated(boid, flock, pars.get_angle());
+      break;
+    default:
+      break;
+    }
 
-  if (prey.is_pred()) {
-    // this means find_prey returned boid itself (i.e. no preys in sight)
-    return {0., 0.};
-  }
-  if (in_corner(prey, pars.get_x_max(), pars.get_y_max())) {
-    // corners represent preys' refuge
-    return {0., 0.};
-  }
+    if (prey.is_pred()) {
+      // this means find_prey returned boid itself (i.e. no preys in sight)
+      return {0., 0.};
+    }
+    if (in_corner(prey, pars.get_x_max(), pars.get_y_max())) {
+      // corners represent preys' refuge
+      return {0., 0.};
+    }
 
-  auto pos_diff{prey.position() - boid.position()};
-  // Predators' look-ahead feature allows them to take into
-  // account the current velocity of prey in addition to its position.
-  Velocity vel{pos_diff.x() + prey.velocity().x(),
-               pos_diff.y() + prey.velocity().y()};
-  if (norm(vel)) {
-    vel = (vel / norm(vel))
-        * (norm(pos_diff) * (norm(boid.velocity()) / pars.get_max_speed()));
+    auto pos_diff{prey.position() - boid.position()};
+    // Predators' look-ahead feature allows them to take into
+    // account the current velocity of prey in addition to its position.
+    Velocity vel{pos_diff.x() + prey.velocity().x(),
+                 pos_diff.y() + prey.velocity().y()};
+    if (norm(vel)) {
+      vel = (vel / norm(vel))
+          * (norm(pos_diff) * (norm(boid.velocity()) / pars.get_max_speed()));
+    }
+    return vel;
   }
-  return vel;
 }
 
 Boid Flock::solve(Boid const& boid, Parameters const& pars) const
@@ -369,4 +374,3 @@ std::vector<std::vector<Boid>>& simulate(Flock& flock, Parameters const& pars,
 
   return states;
 }
-
