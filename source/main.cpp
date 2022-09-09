@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
     int steps{3000};
     int prescale{40};
     int N_boids{120};
+    int N_preds{1};
     auto save_data{false};
     auto show_help{false};
     int seek_type{0};
@@ -30,7 +31,7 @@ int main(int argc, char* argv[])
     // Parser with multiple option arguments and help option
     auto parser = get_parser(angle, d, d_s, s, c, a, max_speed,
                              min_speed_fraction, duration, steps, prescale,
-                             N_boids, save_data, show_help, seek_type);
+                             N_boids, N_preds, save_data, show_help, seek_type);
 
     // Parses the arguments
     auto result = parser.parse({argc, argv});
@@ -52,10 +53,10 @@ int main(int argc, char* argv[])
 
     int const prescale_limit{steps};
 
-    Parameters const pars{angle,    d,        d_s,       s,
-                          c,        a,        max_speed, min_speed_fraction,
-                          duration, steps,    prescale,  prescale_limit,
-                          N_boids,  seek_type};
+    Parameters const pars{angle,    d,       d_s,       s,
+                          c,        a,       max_speed, min_speed_fraction,
+                          duration, steps,   prescale,  prescale_limit,
+                          N_boids,  N_preds, seek_type};
 
     std::array<double, simulations> preys_eaten;
 

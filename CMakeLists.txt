@@ -12,21 +12,9 @@ string(APPEND CMAKE_CXX_FLAGS " -Wall -Wextra")
 string(APPEND CMAKE_CXX_FLAGS_DEBUG " -fsanitize=address -fno-omit-frame-pointer")
 string(APPEND CMAKE_EXE_LINKER_FLAGS_DEBUG " -fsanitize=address -fno-omit-frame-pointer")
 
-find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
-
 add_executable(boids source/main.cpp source/flock.cpp source/boids.cpp source/stats.cpp)
 add_subdirectory(Lyra)
 target_link_libraries(boids PRIVATE bfg::lyra)
-
-add_executable(boids-sfml source/main-sfml.cpp source/boids.cpp source/flock.cpp source/graphics.cpp)
-target_link_libraries(boids-sfml PRIVATE sfml-graphics)
-target_link_libraries(boids-sfml PRIVATE bfg::lyra)
-target_compile_definitions(boids-sfml PRIVATE GRAPHICS)
-add_custom_command(
-        TARGET boids-sfml POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy
-               ${CMAKE_SOURCE_DIR}/bigsky.png
-               ${CMAKE_CURRENT_BINARY_DIR}/bigsky.png)
 
 # to disable testing, pass -DBUILD_TESTING=OFF to cmake during the configuration phase
 if (BUILD_TESTING)

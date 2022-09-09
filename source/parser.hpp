@@ -9,7 +9,7 @@
 inline auto get_parser(double& angle, double& d, double& d_s, double& s,
                        double& c, double& a, double& max_speed,
                        double& min_speed_fraction, double& duration, int& steps,
-                       int& prescale, int& N_boids, bool& save_data,
+                       int& prescale, int& N_boids, int& N_preds, bool& save_data,
                        bool& show_help, int& seek_type)
 {
   return lyra::cli{
@@ -51,6 +51,9 @@ inline auto get_parser(double& angle, double& d, double& d_s, double& s,
       | lyra::opt(N_boids, "number-of-boids")["-b"]["--boids"](
           "Set number of boids  - must be greater than 1  [Default value is "
           "120]")
+      | lyra::opt(N_preds, "number-of-predators")["-P"]["--preds"](
+          "Set number of predators  - must be greater than 0  [Default value is "
+          "1]")
       | lyra::opt(save_data)["--ON"]("Saves data obtained from statistical "
                                      "analysis to specified file  [Default is "
                                      "OFF]")
@@ -82,7 +85,10 @@ inline void print_parameters(Parameters const& pars)
             << '\n'
             << std::setw(15) << "presc p:  " << std::setw(7)
             << pars.get_prescale() << std::setw(20)
-            << "N_boids N: " << std::setw(10) << pars.get_N_boids() << "\n\n";
+            << "N_boids N: " << std::setw(10) << pars.get_N_boids() << '\n'
+            << std::setw(15) << "N_preds P:  " << std::setw(7)
+            << pars.get_N_preds() << std::setw(20)
+            << "seek-type: " << std::setw(10) << pars.get_seek_type() << "\n\n";
 }
 
 #endif
