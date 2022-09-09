@@ -9,7 +9,7 @@
 
 constexpr double pi{3.14159265358979323846};
 constexpr double sqrt2{1.41421356237309504880};
-int constexpr simulations{100};
+constexpr int simulations{100};
 
 // Vector2D, representing the algebraic entity 'vector' in 2D Euclidean space
 
@@ -77,6 +77,7 @@ class Boid
   Position p_;
   Velocity v_;
   bool is_pred_{false};
+  bool is_eaten_{false};
 
  public:
   explicit Boid(Position p, Velocity v, bool is_pred);
@@ -89,6 +90,8 @@ class Boid
   // only const method defined for is_pred_ since predatory nature of a boid
   // is not meant to be modified after its creation
   bool is_pred() const{return is_pred_;}
+  bool is_eaten() const{return is_eaten_;}
+  bool& is_eaten(){return is_eaten_;}
 };
 // clang-format on
 
