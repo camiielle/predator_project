@@ -45,27 +45,19 @@ class Parameters
   double max_speed_;
   double min_speed_;
   double duration_; // duration of the simulation{s}
-  //(or time interval for each evolve, if GRAPHICS is defined)
   int steps_;           // evolve flock for [steps] times
   int prescale_or_fps_; // print flock state every [prescale] steps
-  //(or frames per second, if GRAPHICS is defined)
   int prescale_or_fps_limit_;
   int N_boids_;
   double d_s_pred_; // separation distance for predators
   double s_pred_;   // separation factor for predators
-  int seek_type_;   // 0 for closer, 1 for isolated, 2 for COM
+  int seek_type_;   // 0 for nearest, 1 for isolated, 2 for COM
 
   // values set by developer:
   double x_min_{0.};
   double y_min_{0.};
-#ifdef GRAPHICS
-  double x_max_{.7 * sf::VideoMode::getDesktopMode().width};
-  double y_max_{.7 * sf::VideoMode::getDesktopMode().height};
-#endif
-#ifndef GRAPHICS
   double x_max_{100.};
   double y_max_{100.};
-#endif
 
   bool invariant()
   {
@@ -111,20 +103,10 @@ class Parameters
     is_in_range(a_, 0., 5., "alignment-factor");
     is_greater_than(max_speed_, 0., "maximum-speed");
     is_in_range(min_speed_, 0., max_speed_, "minimum-speed");
-#ifndef GRAPHICS
     is_greater_than(duration_, 0., "duration-of-simulation{s}");
     is_greater_than(steps_, 1, "number-of-evolutions");
     // guarantees that at least two flock's states are printed
     is_in_range(prescale_or_fps_, 0, prescale_or_fps_limit_, "prescale");
-#endif
-#ifdef GRAPHICS
-    is_in_range(prescale_or_fps_, 0, prescale_or_fps_limit_,
-                "frames-per-second");
-// Steps and duration now aren't input pars, so input validation isn't
-// performed. Valid values of fps (validated above) and delta_t (validated in
-// main) result in valid values of duration and steps: therefore, value-checking
-// of both is done through assertions.
-#endif
     is_greater_than(N_boids_, 1, "number-of-boids");
 
     assert(invariant());
@@ -141,12 +123,7 @@ class Parameters
   double get_min_speed() const{return min_speed_;}
   double get_duration() const{return duration_;}
   int get_steps() const{return steps_;}
-  #ifndef GRAPHICS
   int get_prescale() const{return prescale_or_fps_;}
-  #endif
-  #ifdef GRAPHICS
-  int get_fps() const{return prescale_or_fps_;}
-  #endif
   int get_N_boids() const{return N_boids_;}
   double get_x_min() const{return x_min_;}
   double get_x_max() const{return x_max_;}

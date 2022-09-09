@@ -1,6 +1,7 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
+#include "parameters.hpp"
 #include <lyra/lyra.hpp>
 #include <iomanip>
 #include <iostream>
@@ -55,7 +56,7 @@ inline auto get_parser(double& angle, double& d, double& d_s, double& s,
                                      "OFF]")
       | lyra::opt(seek_type, "seek-type")["--seek-type"](
           "Set the seek type  [Default value is "
-          "1]")};
+          "0]")};
 }
 
 // prints summary of values of parameters used in the simulation

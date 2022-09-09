@@ -284,12 +284,7 @@ Boid Flock::solve(Boid const& boid, Parameters const& pars) const
                       + alignment(boid, *this, pars)
                       + cohesion(boid, *this, pars))};
   Velocity v_f{boid.velocity() + d_v};
-#ifndef GRAPHICS
   double const d_t{pars.get_duration() / pars.get_steps()};
-#endif
-#ifdef GRAPHICS
-  double const d_t{pars.get_duration()};
-#endif
   assert(d_t > 0.);
   Position x_f{boid.position().x() + (boid.velocity().x() * d_t),
                boid.position().y() + (boid.velocity().y() * d_t)};
@@ -360,7 +355,6 @@ std::vector<Boid>& fill(std::vector<Boid>& boids, Parameters const& pars,
   return boids;
 }
 
-#ifndef GRAPHICS
 // evolves flock for [steps] times and saves state of the flock in a vector
 // every [prescale] steps
 std::vector<std::vector<Boid>>& simulate(Flock& flock, Parameters const& pars,
@@ -375,4 +369,4 @@ std::vector<std::vector<Boid>>& simulate(Flock& flock, Parameters const& pars,
 
   return states;
 }
-#endif
+
