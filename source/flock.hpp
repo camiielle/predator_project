@@ -60,9 +60,7 @@ Velocity seek(Boid const& boid, Flock const& flock, Parameters const& pars);
 
 std::vector<Boid>& fill(std::vector<Boid>& boids, Parameters const& pars,
                         unsigned int seed);
-
-std::vector<std::vector<Boid>>&
-simulate(Flock& flock, Parameters const& pars,
-         std::vector<std::vector<Boid>>& states);
+void add_predators(Flock& flock, Parameters const& pars, unsigned int seed);
+void simulate(Flock& flock, Parameters const& pars);
 
 #endif

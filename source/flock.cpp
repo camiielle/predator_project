@@ -298,7 +298,7 @@ Velocity seek(Boid const& boid, Flock const& flock, Parameters const& pars)
     // account the current velocity of prey in addition to its position.
     Velocity vel{pos_diff.x() + prey.velocity().x(),
                  pos_diff.y() + prey.velocity().y()};
-    if (norm(vel)) {
+    if (norm(vel) != 0 && norm(pos_diff) != 0) {
       vel = (vel / norm(vel))
           * (norm(pos_diff) * (norm(boid.velocity()) / pars.get_max_speed()));
     }
@@ -392,17 +392,36 @@ std::vector<Boid>& fill(std::vector<Boid>& boids, Parameters const& pars,
   return boids;
 }
 
+void add_predators(Flock& flock, Parameters const& pars, unsigned int seed)
+{
+  for (int i{0}; i != pars.get_N_preds(); ++i) {
+    int init_size{flock.size()};
+    std::default_random_engine eng(seed);
+    std::uniform_real_distribution<double> unidist_px(pars.get_x_min(),
+                                                      pars.get_x_max());
+    std::uniform_real_distribution<double> unidist_py(pars.get_y_min(),
+                                                      pars.get_y_max());
+    std::uniform_real_distribution<double> unidist_v(
+        -pars.get_max_speed() / sqrt2, pars.get_max_speed() / sqrt2);
+    Boid boid{{unidist_px(eng), unidist_py(eng)},
+              {unidist_v(eng), unidist_v(eng)},
+              true};
+
+    normalize(boid.velocity(), pars.get_min_speed(), pars.get_max_speed());
+    assert(norm(boid.velocity()) > pars.get_min_speed()
+           && norm(boid.velocity()) < pars.get_max_speed());
+    assert(boid.is_pred());
+
+    flock.push_back(boid);
+    assert(init_size + 1 == flock.size());
+  }
+}
+
 // evolves flock for [steps] times and saves state of the flock in a vector
 // every [prescale] steps
-std::vector<std::vector<Boid>>& simulate(Flock& flock, Parameters const& pars,
-                                         std::vector<std::vector<Boid>>& states)
+void simulate(Flock& flock, Parameters const& pars)
 {
   for (int step = 0; step != pars.get_steps(); ++step) {
-    if (step % pars.get_prescale() == 0) {
-      states.push_back(flock.state());
-    }
     flock.evolve(pars);
   }
-
-  return states;
 }

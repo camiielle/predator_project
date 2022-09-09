@@ -736,7 +736,7 @@ TEST_CASE("Testing simulate")
   Boid b2_p{{30., 2.}, {0., 1.}, true};
   Flock flock{std::vector<Boid>{b1, b2_p}};
   std::vector<std::vector<Boid>> states{};
-  simulate(flock, pars, states);
+  simulate(flock, pars);
 
   // checking flock evolved 10 times by confronting final positions
   CHECK(flock.state()[0].position() == Position{15., 2.});

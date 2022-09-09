@@ -22,11 +22,9 @@ if (BUILD_TESTING)
  add_executable(parameters.t source/parameters.test.cpp)
  add_executable(boids.t source/boids.test.cpp source/boids.cpp)
  add_executable(flock.t source/flock.test.cpp source/flock.cpp source/boids.cpp)
- add_executable(stats.t source/stats.test.cpp source/stats.cpp source/flock.cpp source/boids.cpp)
 
  add_test(NAME parameters.t COMMAND parameters.t)
  add_test(NAME boids.t COMMAND boids.t)
  add_test(NAME flock.t COMMAND flock.t)
- add_test(NAME stats.t COMMAND stats.t)
 
 endif()

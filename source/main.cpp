@@ -19,19 +19,18 @@ int main(int argc, char* argv[])
     double a{.8};
     double max_speed{80.};
     double min_speed_fraction{.05};
-    double duration{30.};
-    int steps{3000};
+    double duration{200.};
+    int steps{2000};
     int prescale{40};
     int N_boids{120};
     int N_preds{1};
-    auto save_data{false};
     auto show_help{false};
     int seek_type{0};
 
     // Parser with multiple option arguments and help option
     auto parser = get_parser(angle, d, d_s, s, c, a, max_speed,
                              min_speed_fraction, duration, steps, prescale,
-                             N_boids, N_preds, save_data, show_help, seek_type);
+                             N_boids, N_preds, show_help, seek_type);
 
     // Parses the arguments
     auto result = parser.parse({argc, argv});
@@ -68,24 +67,21 @@ int main(int argc, char* argv[])
       // initialize flock
       std::vector<Boid> boids{};
       Flock flock{fill(boids, pars, seed)};
+      // adds N_preds randomly generated
+      add_predators(flock, pars, seed);
 
-      // performs the simulation and saves its data in vector 'states'
-      std::vector<std::vector<Boid>> states;
-      simulate(flock, pars, states);
+      // performs the simulation
+      simulate(flock, pars);
 
-      preys_eaten[0] = 1; // replace with actual number from counter
-
-      // data analysis and printing
-      std::cout << "\n  Report for each of the stored states:\n";
-      std::cout << "\n  AVERAGE DISTANCE:              AVERAGE SPEED: \n\n";
-      std::for_each(states.begin(), states.end(), print_state);
-
-      std::cout << '\n' << std::setfill('=') << std::setw(53);
-      std::cout << '\n' << "    SUMMARY: Parameters used in the simulation\n\n";
-      print_parameters(pars);
+      preys_eaten[i] = flock.counter();
     }
 
     write_counter(preys_eaten, seek_type); // write count to file for analysis
+
+    // printing summary of the parameters used
+    std::cout << '\n' << std::setfill('=') << std::setw(53);
+    std::cout << '\n' << "    SUMMARY: Parameters used in the simulation\n\n";
+    print_parameters(pars);
 
   } catch (Invalid_Parameter const& par_err) {
     std::cerr << "Invalid Parameter: " << par_err.what() << '\n';

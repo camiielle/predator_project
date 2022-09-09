@@ -9,7 +9,7 @@
 inline auto get_parser(double& angle, double& d, double& d_s, double& s,
                        double& c, double& a, double& max_speed,
                        double& min_speed_fraction, double& duration, int& steps,
-                       int& prescale, int& N_boids, int& N_preds, bool& save_data,
+                       int& prescale, int& N_boids, int& N_preds,
                        bool& show_help, int& seek_type)
 {
   return lyra::cli{
@@ -52,11 +52,9 @@ inline auto get_parser(double& angle, double& d, double& d_s, double& s,
           "Set number of boids  - must be greater than 1  [Default value is "
           "120]")
       | lyra::opt(N_preds, "number-of-predators")["-P"]["--preds"](
-          "Set number of predators  - must be greater than 0  [Default value is "
+          "Set number of predators  - must be greater than 0  [Default value "
+          "is "
           "1]")
-      | lyra::opt(save_data)["--ON"]("Saves data obtained from statistical "
-                                     "analysis to specified file  [Default is "
-                                     "OFF]")
       | lyra::opt(seek_type, "seek-type")["--seek-type"](
           "Set the seek type  [Default value is "
           "0]")};
