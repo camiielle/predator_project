@@ -7,6 +7,8 @@
 // defining flocks' flying rules (different for regular boid and predator)
 // functions to perform simulation (methods solve and evolve, fill, simulate)
 
+// all flying rules don't take into account eaten boids
+
 // fills vector with neighbours of boid (inserting also boid itself, if boid is
 // regular)
 std::vector<Boid>& neighbours(Boid const& boid, Flock const& flock,
@@ -16,7 +18,8 @@ std::vector<Boid>& neighbours(Boid const& boid, Flock const& flock,
   assert(flock.size() > 1); // expects a flock with more than one boid
   std::copy_if((flock.state().begin()), (flock.state().end()),
                std::back_inserter(nbrs), [=, &boid](Boid const& other) {
-                 return (!(other.is_pred())) && (is_seen(boid, other, angle))
+                 return (!(other.is_pred())) && ((!other.is_eaten()))
+                     && (is_seen(boid, other, angle))
                      && (distance(boid, other) < d);
                });
   // a regular boid is a neighbour if close enough and in the field of view
@@ -67,10 +70,11 @@ Boid const& find_prey(Boid const& boid, Flock const& flock, double angle)
   assert(boid.is_pred());   // only predators feel the seek drive towards preys
   assert(flock.size() > 1); // expects a flock with more than one boid
 
-  // checking if at least one regular boid is in sight
+  // checking if at least one alive regular boid is in sight
   auto it{std::find_if((flock.state().begin()), (flock.state().end()),
                        [=, &boid](Boid const& b) {
-                         return ((!(b.is_pred())) && (is_seen(boid, b, angle)));
+                         return ((!(b.is_pred())) && (!(b.is_eaten()))
+                                 && (is_seen(boid, b, angle)));
                        })};
   // If none is, boid itself is returned
   if (it == (flock.state().end())) {
@@ -82,8 +86,10 @@ Boid const& find_prey(Boid const& boid, Flock const& flock, double angle)
         (flock.state().begin()), (flock.state().end()),
         [=, &boid](Boid const& b1, Boid const& b2) {
           return (b2.is_pred())
-                   ? (!(b1.is_pred()) && (is_seen(boid, b1, angle)))
+                   ? (!(b1.is_pred()) && (is_seen(boid, b1, angle))
+                      && (!(b1.is_eaten())))
                    : (!(b1.is_pred()) && (is_seen(boid, b1, angle))
+                      && (!(b1.is_eaten()))
                       && (distance(boid, b1) < distance(boid, b2)));
         })};
     assert(!(prey->is_pred()));
@@ -125,10 +131,11 @@ Boid find_prey_isolated(Boid const& boid, Flock const& flock, double angle)
   assert(boid.is_pred());   // only predators feel the seek drive towards preys
   assert(flock.size() > 1); // expects a flock with more than one boid
 
-  // checking if at least one regular boid is in sight
+  // checking if at least one alive regular boid is in sight
   auto it{std::find_if((flock.state().begin()), (flock.state().end()),
                        [=, &boid](Boid const& b) {
-                         return ((!(b.is_pred())) && (is_seen(boid, b, angle)));
+                         return ((!(b.is_pred())) && (is_seen(boid, b, angle))
+                                 && (!(b.is_eaten())));
                        })};
 
   std::vector<double> min_ang_dists(flock.state().size());
@@ -138,11 +145,6 @@ Boid find_prey_isolated(Boid const& boid, Flock const& flock, double angle)
                    return min_ang_dist(pred, b, flock);
                  });
 
-  auto min_rule{[=, &boid](Boid const& b1, Boid const& b2) {
-    return (b2.is_pred()) ? (!(b1.is_pred()) && (is_seen(boid, b1, angle)))
-                          : (!(b1.is_pred()) && (is_seen(boid, b1, angle))
-                             && (distance(boid, b1) < distance(boid, b2)));
-  }};
   // If none is, boid itself is returned
   if (it == (flock.state().end())) {
     return boid;
@@ -282,24 +284,28 @@ Velocity seek(Boid const& boid, Flock const& flock, Parameters const& pars)
 
 Boid Flock::solve(Boid const& boid, Parameters const& pars) const
 {
-  // different flying rules for predator vs. regular boid
-  Velocity d_v{(boid.is_pred())
-                   ? (separation(boid, *this, pars) + seek(boid, *this, pars))
-                   : (separation(boid, *this, pars)
-                      + alignment(boid, *this, pars)
-                      + cohesion(boid, *this, pars))};
-  Velocity v_f{boid.velocity() + d_v};
-  double const d_t{pars.get_duration() / pars.get_steps()};
-  assert(d_t > 0.);
-  Position x_f{boid.position().x() + (boid.velocity().x() * d_t),
-               boid.position().y() + (boid.velocity().y() * d_t)};
-  Boid b_f{(boid.is_pred()) ? Boid{x_f, v_f, true} : Boid{x_f, v_f}};
-  // Boid returned from solve is always "valid", i.e bound_position has been
-  // applied and speed is within limits:
-  bound_position(b_f, pars.get_x_min(), pars.get_x_max(), pars.get_y_min(),
-                 pars.get_y_max());
-  normalize(b_f.velocity(), pars.get_min_speed(), pars.get_max_speed());
-  return b_f;
+  if (boid.is_eaten()) {
+    return boid;
+  } else {
+    // different flying rules for predator vs. regular boid
+    Velocity d_v{(boid.is_pred())
+                     ? (separation(boid, *this, pars) + seek(boid, *this, pars))
+                     : (separation(boid, *this, pars)
+                        + alignment(boid, *this, pars)
+                        + cohesion(boid, *this, pars))};
+    Velocity v_f{boid.velocity() + d_v};
+    double const d_t{pars.get_duration() / pars.get_steps()};
+    assert(d_t > 0.);
+    Position x_f{boid.position().x() + (boid.velocity().x() * d_t),
+                 boid.position().y() + (boid.velocity().y() * d_t)};
+    Boid b_f{(boid.is_pred()) ? Boid{x_f, v_f, true} : Boid{x_f, v_f}};
+    // Boid returned from solve is always "valid", i.e bound_position has been
+    // applied and speed is within limits:
+    bound_position(b_f, pars.get_x_min(), pars.get_x_max(), pars.get_y_min(),
+                   pars.get_y_max());
+    normalize(b_f.velocity(), pars.get_min_speed(), pars.get_max_speed());
+    return b_f;
+  }
 }
 
 void Flock::evolve(Parameters const& pars)
