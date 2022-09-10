@@ -106,53 +106,54 @@ double ang_dist(Boid const& pred, Boid const& b1, Boid const& b2)
   return std::abs(ang2 - ang1);
 }
 
-double min_ang_dist(Boid const& pred, Boid const& boid, Flock const& flock)
+double min_ang_dist(Boid const& pred, Boid const& boid,
+                    std::vector<Boid> const& nbrs, double angle)
 {
+  assert(pred.is_pred());
   std::vector<Boid> flock1;
-  flock1.reserve(flock.state().size() - 1);
-
   // remove the boid we are considering
-  std::copy_if(flock.state().begin(), flock.state().end(), flock1.begin(),
-               [&boid](Boid const& other) {
+  std::copy_if(nbrs.begin(), nbrs.end(), std::back_inserter(flock1),
+               [&, angle](Boid const& other) {
                  return !(boid.position() == other.position());
                });
 
-  std::vector<double> dists(flock.state().size() - 1);
-
+  std::vector<double> dists;
   std::transform(
-      flock1.begin(), flock1.end(), dists.begin(),
+      flock1.begin(), flock1.end(), std::back_inserter(dists),
       [&](Boid const& other) { return ang_dist(pred, boid, other); });
 
   return *std::min_element(dists.begin(), dists.end());
 }
 
-Boid find_prey_isolated(Boid const& boid, Flock const& flock, double angle)
+Boid find_prey_isolated(Boid const& boid, Flock const& flock, double angle,
+                        double dist)
 {
   assert(boid.is_pred());   // only predators feel the seek drive towards preys
   assert(flock.size() > 1); // expects a flock with more than one boid
 
-  // checking if at least one alive regular boid is in sight
+  // checking if at least one alive regular boid is in sight and in distance
   auto it{std::find_if((flock.state().begin()), (flock.state().end()),
                        [=, &boid](Boid const& b) {
                          return ((!(b.is_pred())) && (is_seen(boid, b, angle))
-                                 && (!(b.is_eaten())));
+                                 && (!(b.is_eaten()))
+                                 && distance(boid, b) < dist);
                        })};
-
-  std::vector<double> min_ang_dists(flock.state().size());
-
-  std::transform(flock.state().begin(), flock.state().end(),
-                 min_ang_dists.begin(), [&pred = boid, &flock](Boid const& b) {
-                   return min_ang_dist(pred, b, flock);
-                 });
-
   // If none is, boid itself is returned
   if (it == (flock.state().end())) {
     return boid;
   } else {
-    auto max_dist_it{
-        std::max_element(min_ang_dists.begin(), min_ang_dists.end())};
-    assert(max_dist_it != min_ang_dists.end());
-    Boid prey{flock.state()[max_dist_it - min_ang_dists.begin()]};
+    std::vector<Boid> nbrs;
+    neighbours(boid, flock, nbrs, angle, dist);
+    // not risking narrowing since N_nbrs < N_boids which is an int
+    int vec_size{static_cast<int>(nbrs.size())};
+    assert(vec_size >= 1);
+    auto most_isolated_it{std::max_element(
+        nbrs.begin(), nbrs.end(), [&, angle](Boid const& b1, Boid const& b2) {
+          return min_ang_dist(boid, b1, nbrs, angle)
+               < min_ang_dist(boid, b2, nbrs, angle);
+        })};
+    assert(most_isolated_it != nbrs.end());
+    Boid prey{*most_isolated_it};
     assert(!(prey.is_pred()));
     return prey;
   }
@@ -163,9 +164,9 @@ bool is_victim(Boid const& predator, Boid const& regular,
                Parameters const& pars)
 {
   assert(predator.is_pred());
-  return ((!regular.is_pred()) && (!regular.is_eaten())
+  return ((!(regular.is_pred())) && (!(regular.is_eaten()))
           && (is_seen(predator, regular, pars.get_angle()))
-          && distance(predator, regular) < (pars.get_d_s_pred() / 24.5));
+          && (distance(predator, regular) < (pars.get_d_s_pred() / 24.5)));
 }
 
 // changes boids' parameter is_eaten and increases flock's internal counter
@@ -182,8 +183,9 @@ void set_victims(Boid const& boid, Flock& flock, Parameters const& pars)
   }
 }
 
-// NB: the fact that boid itself is inserted in comps or close_nbrs vectors does
-// not influence sum, since (boid.position()-boid.position()) equals {0.,0.}
+// NB: the fact that boid itself is inserted in comps or close_nbrs vectors
+// does not influence sum, since (boid.position()-boid.position()) equals
+// {0.,0.}
 Velocity separation(Boid const& boid, Flock const& flock,
                     Parameters const& pars)
 {
@@ -278,7 +280,8 @@ Velocity seek(Boid const& boid, Flock const& flock, Parameters const& pars)
       prey = find_prey(boid, flock, pars.get_angle());
       break;
     case 1:
-      prey = find_prey_isolated(boid, flock, pars.get_angle());
+      prey = find_prey_isolated(boid, flock, pars.get_angle(),
+                                pars.get_d_s_pred());
       break;
     default:
       break;
@@ -345,9 +348,9 @@ void Flock::evolve(Parameters const& pars)
                     [](Boid const& b1, Boid const& b2) {
                       return (b1.is_pred() == b2.is_pred());
                     }));
-  // overwriting only when all new states have been calculated (instead of using
-  // flock_ as the output range in std::transform) to prevent an old boid's
-  // state from being calculated with an already updated boid
+  // overwriting only when all new states have been calculated (instead of
+  // using flock_ as the output range in std::transform) to prevent an old
+  // boid's state from being calculated with an already updated boid
   flock_ = state_f;
   std::for_each(flock_.begin(), flock_.end(),
                 [&](Boid const& boid) { set_victims(boid, *this, pars); });
