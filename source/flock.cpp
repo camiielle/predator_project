@@ -250,8 +250,8 @@ Velocity cohesion(Boid const& boid, Flock const& flock, Parameters const& pars)
   neighbours(boid, flock, nbrs, pars.get_angle(), distance);
   int vec_size{static_cast<int>(nbrs.size())}; // not risking narrowing since
   // N_nbrs < N_boids which is an int
-  if (vec_size == 1 || vec_size == 0) { // for regulars, if nbrs has only 1
-                                        // element, it's boid itself
+  if (vec_size == (boid.is_pred()) ? 0 : 1) {
+    // for regular, if nbrs has only 1 element, it's boid itself
     return {0., 0.};
   } else {
     auto sum{std::transform_reduce((nbrs.begin()), (nbrs.end()),
@@ -311,7 +311,7 @@ Velocity seek(Boid const& boid, Flock const& flock, Parameters const& pars)
 
 Boid Flock::solve(Boid const& boid, Parameters const& pars) const
 {
-  if (boid.is_eaten()) {
+  if (boid.is_eaten()) { // if boid is eaten, new state is not calculated
     return boid;
   } else {
     // different flying rules for predator vs. regular boid
@@ -397,24 +397,22 @@ std::vector<Boid>& fill(std::vector<Boid>& boids, Parameters const& pars,
 
 void add_predators(Flock& flock, Parameters const& pars, unsigned int seed)
 {
+  std::default_random_engine eng(seed);
+  std::uniform_real_distribution<double> unidist_px(pars.get_x_min(),
+                                                    pars.get_x_max());
+  std::uniform_real_distribution<double> unidist_py(pars.get_y_min(),
+                                                    pars.get_y_max());
+  std::uniform_real_distribution<double> unidist_v(
+      -pars.get_max_speed() / sqrt2, pars.get_max_speed() / sqrt2);
   for (int i{0}; i != pars.get_N_preds(); ++i) {
     int init_size{flock.size()};
-    std::default_random_engine eng(seed);
-    std::uniform_real_distribution<double> unidist_px(pars.get_x_min(),
-                                                      pars.get_x_max());
-    std::uniform_real_distribution<double> unidist_py(pars.get_y_min(),
-                                                      pars.get_y_max());
-    std::uniform_real_distribution<double> unidist_v(
-        -pars.get_max_speed() / sqrt2, pars.get_max_speed() / sqrt2);
     Boid boid{{unidist_px(eng), unidist_py(eng)},
               {unidist_v(eng), unidist_v(eng)},
               true};
-
     normalize(boid.velocity(), pars.get_min_speed(), pars.get_max_speed());
     assert(norm(boid.velocity()) > pars.get_min_speed()
            && norm(boid.velocity()) < pars.get_max_speed());
     assert(boid.is_pred());
-
     flock.push_back(boid);
     assert(init_size + 1 == flock.size());
   }
