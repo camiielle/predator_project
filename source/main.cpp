@@ -69,10 +69,8 @@ int main(int argc, char* argv[])
       Flock flock{fill(boids, pars, seed)};
       // adds N_preds randomly generated
       add_predators(flock, pars, seed);
-
       // performs the simulation
       simulate(flock, pars);
-
       preys_eaten[i] = flock.counter();
     }
 

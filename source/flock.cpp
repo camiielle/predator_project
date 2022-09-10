@@ -418,8 +418,7 @@ void add_predators(Flock& flock, Parameters const& pars, unsigned int seed)
   }
 }
 
-// evolves flock for [steps] times and saves state of the flock in a vector
-// every [prescale] steps
+// evolves flock for [steps] times
 void simulate(Flock& flock, Parameters const& pars)
 {
   for (int step = 0; step != pars.get_steps(); ++step) {
