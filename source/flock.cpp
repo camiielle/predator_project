@@ -250,7 +250,7 @@ Velocity cohesion(Boid const& boid, Flock const& flock, Parameters const& pars)
   neighbours(boid, flock, nbrs, pars.get_angle(), distance);
   int vec_size{static_cast<int>(nbrs.size())}; // not risking narrowing since
   // N_nbrs < N_boids which is an int
-  if (vec_size == (boid.is_pred()) ? 0 : 1) {
+  if (vec_size == 0 || vec_size == 1) {
     // for regular, if nbrs has only 1 element, it's boid itself
     return {0., 0.};
   } else {
