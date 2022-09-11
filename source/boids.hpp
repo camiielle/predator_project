@@ -9,7 +9,7 @@
 
 constexpr double pi{3.14159265358979323846};
 constexpr double sqrt2{1.41421356237309504880};
-constexpr int simulations{50};
+constexpr int simulations{100};
 
 // Vector2D, representing the algebraic entity 'vector' in 2D Euclidean space
 
